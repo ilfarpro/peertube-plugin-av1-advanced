@@ -6,7 +6,7 @@ let logger : Logger
 let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
-const DEFAULT_QUALITY : number = 8
+const DEFAULT_QUALITY : number = 7
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
     [VideoResolution.H_144P, 320 * 1000],
@@ -52,7 +52,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
     registerSetting({
         name: 'hardware-decode',
-        label: 'Hardware decode',
+        label: 'Hardware decode [BROKEN, DO NOT ENABLE]',
 
         type: 'input-checkbox',
 
@@ -63,11 +63,11 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     })
     registerSetting({
         name: 'quality',
-        label: 'Quality',
+        label: 'SVT-AV1 preset',
 
         type: 'select',
         options: [
-            { label: 'Automatic', value: '8' },
+            { label: 'Recommended (7)', value: '7' },
             { label: '10', value: '10' },
             { label: '9', value: '9' },
             { label: '8', value: '8' },
@@ -130,7 +130,7 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
     }
 
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
-    logger.info(`Quality: ${pluginSettings.quality}`)
+    logger.info(`SVT-AV1 preset: ${pluginSettings.quality}`)
 }
 
 function printResolution(resolution : VideoResolution) : string {
@@ -187,8 +187,12 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         inputOptions: shouldInitVaapi ? buildInitOptions() : [],
         outputOptions: [
             `-preset ${pluginSettings.quality}`,
-            `-b:v${streamSuffix} ${targetBitrate}`,
-            `-bufsize ${targetBitrate * 2}`
+            `-pix_fmt yuv420p10le`,
+            //`-b:v${streamSuffix} ${targetBitrate}`,
+            `-crf 26`,
+            `-maxrate ${targetBitrate}`,
+            `-bufsize ${targetBitrate * 2}`,
+            `-svtav1-params tune=0`
         ]
     }
     logger.info(`EncoderOptions: ${JSON.stringify(options)}`)

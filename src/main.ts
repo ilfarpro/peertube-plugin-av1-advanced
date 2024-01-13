@@ -6,7 +6,7 @@ let logger : Logger
 let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
-const DEFAULT_QUALITY : number = -1
+const DEFAULT_QUALITY : number = 8
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
     [VideoResolution.H_144P, 320 * 1000],
@@ -67,7 +67,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'select',
         options: [
-            { label: 'Automatic', value: '-1' },
+            { label: 'Automatic', value: '8' },
             { label: '10', value: '10' },
             { label: '9', value: '9' },
             { label: '8', value: '8' },
@@ -225,7 +225,8 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
         `-level:v${streamSuffix} 3.1`,
         `-g:v${streamSuffix} ${fps*2}`,
         `-b:v${streamSuffix} ${targetBitrate}`,
-        `-bufsize ${targetBitrate * 2}`
+        `-bufsize ${targetBitrate * 2}`,
+        `-loglevel debug`
       ]
     }
     logger.info(`EncoderOptions: ${JSON.stringify(options)}`)

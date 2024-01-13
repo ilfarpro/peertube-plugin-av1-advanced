@@ -37,8 +37,8 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
     logger.info("Registering peertube-plugin-hardware-encode");
 
-    const encoder = 'h264_vaapi'
-    const profileName = 'vaapi'
+    const encoder = 'libsvtav1'
+    const profileName = 'libsvtav1-new'
 
     // Add trasncoding profiles
     transcodingManager.addVODProfile(encoder, profileName, vodBuilder)

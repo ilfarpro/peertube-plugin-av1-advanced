@@ -159,7 +159,7 @@ function buildInitOptions() {
         ]
     } else {
         return [
-            '-vaapi_device /dev/dri/renderD128'
+            ''
         ]
     }
 }

@@ -158,7 +158,7 @@ function buildInitOptions() {
         ]
     } else {
         return [
-            ''
+            '-loglevel info'
         ]
     }
 }
@@ -226,7 +226,6 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
         `-g:v${streamSuffix} ${fps*2}`,
         `-b:v${streamSuffix} ${targetBitrate}`,
         `-bufsize ${targetBitrate * 2}`,
-        `-loglevel debug`
       ]
     }
     logger.info(`EncoderOptions: ${JSON.stringify(options)}`)

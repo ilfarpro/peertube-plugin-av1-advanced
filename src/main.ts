@@ -165,7 +165,7 @@ function buildInitOptions() {
 
 async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<EncoderOptions> {
     const { resolution, fps, streamNum, inputBitrate } = params
-    const streamSuffix = streamNum == undefined ? '' : `:${streamNum}`
+    //const streamSuffix = streamNum == undefined ? '' : `:${streamNum}`
     let targetBitrate = getTargetBitrate(resolution, fps)
     let shouldInitVaapi = (streamNum == undefined || streamNum <= latestStreamNum)
 

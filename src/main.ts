@@ -68,13 +68,12 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
         type: 'select',
         options: [
             { label: 'Automatic', value: '-1' },
-            { label: '1', value: '1' },
-            { label: '2', value: '2' },
-            { label: '3', value: '3' },
-            { label: '4', value: '4' },
-            { label: '5', value: '5' },
+            { label: '10', value: '10' },
+            { label: '9', value: '9' },
+            { label: '8', value: '8' },
+            { label: '7', value: '7' },
             { label: '6', value: '6' },
-            { label: '7', value: '7' }
+            { label: '5', value: '5' },
         ],
 
         descriptionHTML: 'This parameter controls the speed / quality tradeoff. Lower values mean better quality but slower encoding. Higher values mean faster encoding but lower quality. This setting is hardware dependent, you may need to experiment to find the best value for your hardware. Some hardware may have less than 7 levels of compression.',
@@ -183,11 +182,11 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     let options : EncoderOptions = {
         scaleFilter: {
             // software decode requires specifying pixel format for hardware filter and upload it to GPU
-            name: pluginSettings.hardwareDecode ? 'scale_vaapi' : 'format=nv12,hwupload,scale_vaapi'
+            name: pluginSettings.hardwareDecode ? 'scale' : 'format=nv12,hwupload,scale_vaapi'
         },
         inputOptions: shouldInitVaapi ? buildInitOptions() : [],
         outputOptions: [
-            `-quality ${pluginSettings.quality}`,
+            `-preset ${pluginSettings.quality}`,
             `-b:v${streamSuffix} ${targetBitrate}`,
             `-bufsize ${targetBitrate * 2}`
         ]
@@ -220,7 +219,7 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
       },
       inputOptions: shouldInitVaapi ? buildInitOptions() : [],
       outputOptions: [
-        `-quality ${pluginSettings.quality}`,
+        `-preset ${pluginSettings.quality}`,
         `-r:v${streamSuffix} ${fps}`,
         `-profile:v${streamSuffix} high`,
         `-level:v${streamSuffix} 3.1`,

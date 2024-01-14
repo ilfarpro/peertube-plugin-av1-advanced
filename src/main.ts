@@ -12,10 +12,10 @@ const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_144P, 320 * 1000],
     [VideoResolution.H_360P, 780 * 1000],
     [VideoResolution.H_480P, 1500 * 1000],
-    [VideoResolution.H_720P, 2800 * 1000],
-    [VideoResolution.H_1080P, 5200 * 1000],
-    [VideoResolution.H_1440P, 10_000 * 1000],
-    [VideoResolution.H_4K, 22_000 * 1000]
+    [VideoResolution.H_720P, 4500 * 1000],
+    [VideoResolution.H_1080P, 7000 * 1000],
+    [VideoResolution.H_1440P, 11_000 * 1000],
+    [VideoResolution.H_4K, 16_000 * 1000]
 ])
 
 interface PluginSettings {

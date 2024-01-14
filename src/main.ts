@@ -8,6 +8,7 @@ let transcodingManager : PluginTranscodingManager
 const DEFAULT_HARDWARE_DECODE : boolean = false
 const DEFAULT_QUALITY : number = 7
 const DEFAULT_CRF : number = 23
+const DEFAULT_GOP : number = 2
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
     [VideoResolution.H_144P, 1000 * 1000],
@@ -23,12 +24,14 @@ interface PluginSettings {
     hardwareDecode : boolean
     quality: number
     crf: number
+    gop: number
     baseBitrate: Map<VideoResolution, number>
 }
 let pluginSettings : PluginSettings = {
     hardwareDecode: DEFAULT_HARDWARE_DECODE,
     quality: DEFAULT_QUALITY,
     crf: DEFAULT_CRF,
+    gop: DEFAULT_GOP,
     baseBitrate: new Map(DEFAULT_BITRATES)
 }
 
@@ -126,6 +129,25 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     })
 
     registerSetting({
+        name: 'gop',
+        label: 'GoP size (seconds)',
+
+        type: 'select',
+        options: [
+            { label: 'Recommended (2)', value: '2' },
+            { label: '1', value: '1' },
+            { label: '2', value: '2' },
+            { label: '3', value: '3' },
+            { label: '4', value: '4' },
+        ],
+
+        descriptionHTML: 'This parameter controls GoP (Group of Picture) size. Lower values mean better quality and less playback seeking latency but higher filesize and bandwidth consumption. Higher values will bring blocky artifact. You may need to experiment to find the best value for you.',
+
+        default: DEFAULT_GOP.toString(),
+        private: false
+    })
+
+    registerSetting({
         name: 'base-bitrate-description',
         label: 'Base bitrate',
 
@@ -165,6 +187,7 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
     pluginSettings.hardwareDecode = await settingsManager.getSetting('hardware-decode') == "true"
     pluginSettings.quality = parseInt(await settingsManager.getSetting('quality') as string) || DEFAULT_QUALITY
     pluginSettings.crf = parseInt(await settingsManager.getSetting('crf') as string) || DEFAULT_CRF
+    pluginSettings.gop = parseInt(await settingsManager.getSetting('gop') as string) || DEFAULT_GOP
 
     for (const [resolution, bitrate] of DEFAULT_BITRATES) {
         const key = `base-bitrate-${resolution}`
@@ -176,6 +199,7 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
     logger.info(`SVT-AV1 preset: ${pluginSettings.quality}`)
     logger.info(`CRF: ${pluginSettings.crf}`)
+    logger.info(`GOP: ${pluginSettings.gop}`)
 }
 
 function printResolution(resolution : VideoResolution) : string {
@@ -223,7 +247,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     if (shouldInitVaapi && streamNum != undefined) {
         latestStreamNum = streamNum
     }
-    // You can also return a promise
+    // SOFTWARE ENCODING SETTINGS
     let options : EncoderOptions = {
         scaleFilter: {
             // software decode requires specifying pixel format for hardware filter and upload it to GPU
@@ -232,11 +256,12 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         inputOptions: shouldInitVaapi ? buildInitOptions() : [],
         outputOptions: [
             `-preset ${pluginSettings.quality}`,
-            `-pix_fmt yuv420p10le`,
+            `-pix_fmt yuv420p`,
             //`-b:v${streamSuffix} ${targetBitrate}`,
             `-crf ${pluginSettings.crf}`,
             `-maxrate ${targetBitrate}`,
             `-bufsize ${targetBitrate * 2}`,
+            `-g ${fps}*${pluginSettings.gop}`,
             `-svtav1-params tune=0`
         ]
     }
@@ -272,7 +297,7 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
         `-r:v${streamSuffix} ${fps}`,
         `-profile:v${streamSuffix} high`,
         `-level:v${streamSuffix} 3.1`,
-        `-g:v${streamSuffix} ${fps*2}`,
+        `-g:v${streamSuffix} ${fps*1}`,
         `-b:v${streamSuffix} ${targetBitrate}`,
         `-bufsize ${targetBitrate * 2}`,
       ]

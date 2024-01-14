@@ -7,6 +7,7 @@ let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
 const DEFAULT_QUALITY : number = 7
+const DEFAULT_CRF : number = 23
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
     [VideoResolution.H_144P, 320 * 1000],
@@ -21,11 +22,13 @@ const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
 interface PluginSettings {
     hardwareDecode : boolean
     quality: number
+    crf: number
     baseBitrate: Map<VideoResolution, number>
 }
 let pluginSettings : PluginSettings = {
     hardwareDecode: DEFAULT_HARDWARE_DECODE,
     quality: DEFAULT_QUALITY,
+    crf: DEFAULT_CRF,
     baseBitrate: new Map(DEFAULT_BITRATES)
 }
 
@@ -35,7 +38,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     logger = peertubeHelpers.logger
     transcodingManager = transcode
 
-    logger.info("Registering peertube-plugin-av1-transcode");
+    logger.info("Registering peertube-plugin-av1-advanced");
 
     const encoder = 'libsvtav1'
     const profileName = 'SVT-AV1'
@@ -83,6 +86,46 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     })
 
     registerSetting({
+        name: 'crf',
+        label: 'CRF',
+
+        type: 'select',
+        options: [
+            { label: 'Recommended (23)', value: '23' },
+            { label: '38', value: '38' },
+            { label: '37', value: '37' },
+            { label: '36', value: '36' },
+            { label: '35', value: '35' },
+            { label: '34', value: '34' },
+            { label: '33', value: '33' },
+            { label: '32', value: '32' },
+            { label: '31', value: '31' },
+            { label: '30', value: '30' },
+            { label: '29', value: '29' },
+            { label: '28', value: '28' },
+            { label: '27', value: '27' },
+            { label: '26', value: '26' },
+            { label: '25', value: '25' },
+            { label: '24', value: '24' },
+            { label: '23', value: '23' },
+            { label: '22', value: '22' },
+            { label: '21', value: '21' },
+            { label: '20', value: '20' },
+            { label: '19', value: '19' },
+            { label: '18', value: '18' },
+            { label: '17', value: '17' },
+            { label: '16', value: '16' },
+            { label: '15', value: '15' },
+            { label: '14', value: '14' },
+        ],
+
+        descriptionHTML: 'This parameter controls the compression / quality tradeoff. Lower values mean better quality but higher filesize and higher bandwidth consumption. You may need to experiment to find the best value for you.',
+
+        default: DEFAULT_CRF.toString(),
+        private: false
+    })
+
+    registerSetting({
         name: 'base-bitrate-description',
         label: 'Base bitrate',
 
@@ -113,7 +156,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 }
 
 export async function unregister() {
-    logger.info("Unregistering peertube-plugin-av1-transcode")
+    logger.info("Unregistering peertube-plugin-av1-advanced")
     transcodingManager.removeAllProfilesAndEncoderPriorities()
     return true
 }
@@ -121,6 +164,7 @@ export async function unregister() {
 async function loadSettings(settingsManager: PluginSettingsManager) {
     pluginSettings.hardwareDecode = await settingsManager.getSetting('hardware-decode') == "true"
     pluginSettings.quality = parseInt(await settingsManager.getSetting('quality') as string) || DEFAULT_QUALITY
+    pluginSettings.crf = parseInt(await settingsManager.getSetting('crf') as string) || DEFAULT_CRF
 
     for (const [resolution, bitrate] of DEFAULT_BITRATES) {
         const key = `base-bitrate-${resolution}`
@@ -131,6 +175,7 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
 
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
     logger.info(`SVT-AV1 preset: ${pluginSettings.quality}`)
+    logger.info(`CRF: ${pluginSettings.crf}`)
 }
 
 function printResolution(resolution : VideoResolution) : string {
@@ -189,7 +234,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
             `-preset ${pluginSettings.quality}`,
             `-pix_fmt yuv420p10le`,
             //`-b:v${streamSuffix} ${targetBitrate}`,
-            `-crf 26`,
+            `-crf ${pluginSettings.crf}`,
             `-maxrate ${targetBitrate}`,
             `-bufsize ${targetBitrate * 2}`,
             `-svtav1-params tune=0`

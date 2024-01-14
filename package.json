@@ -1,14 +1,17 @@
 {
-    "name": "peertube-plugin-av1-testing",
-    "version": "0.2.9",
+    "name": "peertube-plugin-av1-transcode",
+    "version": "0.3.1",
     "license": "MIT",
-    "description": "Plugin that adds transcode profiles which use vaapi for hardware acceleration",
+    "description": "Plugin adds SVT-AV1 transcoding profile with CRF 26. Available settings: max bitrate restriction per resolution, SVT-AV1 presets from 8 to 5. Highly reccommended to use with latest FFMPEG to get latest SVT-AV1 encoder version. FFMPEG on official Peertube Docker image comes with outdated version.",
     "engine": {
         "peertube": ">=5.1.0"
     },
     "keywords": [
         "peertube",
-        "plugin"
+        "plugin",
+        "av1",
+        "trascode",
+        "encode"
     ],
     "homepage": "https://github.com/TheoLeCalvar/peertube-plugin-hardware-transcode-vaapi",
     "author": "gdsn",

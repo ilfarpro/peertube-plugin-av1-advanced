@@ -300,6 +300,7 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
         `-g:v${streamSuffix} ${fps*1}`,
         `-b:v${streamSuffix} ${targetBitrate}`,
         `-bufsize ${targetBitrate * 2}`,
+        `-map_metadata -1`,
       ]
     }
     logger.info(`EncoderOptions: ${JSON.stringify(options)}`)

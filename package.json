@@ -2,7 +2,7 @@
     "name": "peertube-plugin-av1-transcode",
     "version": "0.3.1",
     "license": "MIT",
-    "description": "Plugin adds SVT-AV1 transcoding profile with CRF 26. Available settings: max bitrate restriction per resolution, SVT-AV1 presets from 8 to 5. Highly reccommended to use with latest FFMPEG to get latest SVT-AV1 encoder version. FFMPEG on official Peertube Docker image comes with outdated version.",
+    "description": "Adds SVT-AV1 transcoding profile. Available settings: max bitrate per resolution, SVT-AV1 presets, CRF. Reccommended to use with latest FFMPEG to get latest SVT-AV1 encoder. FFMPEG in official Peertube Docker image comes with outdated version.",
     "engine": {
         "peertube": ">=5.1.0"
     },

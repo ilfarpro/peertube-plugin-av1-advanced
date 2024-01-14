@@ -35,10 +35,10 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     logger = peertubeHelpers.logger
     transcodingManager = transcode
 
-    logger.info("Registering peertube-plugin-hardware-encode");
+    logger.info("Registering peertube-plugin-av1-transcode");
 
     const encoder = 'libsvtav1'
-    const profileName = 'libsvtav1-new'
+    const profileName = 'SVT-AV1'
 
     // Add trasncoding profiles
     transcodingManager.addVODProfile(encoder, profileName, vodBuilder)
@@ -56,7 +56,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'input-checkbox',
 
-        descriptionHTML: 'Use hardware video decoder instead of software decoder. This will slightly improve performance but may cause some issues with some videos. If you encounter issues, disable this option and restart failed jobs.',
+        descriptionHTML: 'Currently broken. Setting enables hardware encoder instead of software one. This highly improves encoding speed but end result will be looking slightly worse compared to softrware encoded video.',
 
         default: DEFAULT_HARDWARE_DECODE,
         private: false
@@ -76,7 +76,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
             { label: '5', value: '5' },
         ],
 
-        descriptionHTML: 'This parameter controls the speed / quality tradeoff. Lower values mean better quality but slower encoding. Higher values mean faster encoding but lower quality. This setting is hardware dependent, you may need to experiment to find the best value for your hardware. Some hardware may have less than 7 levels of compression.',
+        descriptionHTML: 'This parameter controls the speed / quality tradeoff. Lower values mean better quality but way more slower encoding. Higher values mean faster encoding but lower quality. This setting is hardware dependent, you may need to experiment to find the best value for your hardware.',
 
         default: DEFAULT_QUALITY.toString(),
         private: false
@@ -88,7 +88,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'html',
         html: '',
-        descriptionHTML: `The base bitrate for video in bits. We take the min bitrate between the bitrate setting and video bitrate.<br/>This is the bitrate used when the video is transcoded at 30 FPS. The bitrate will be scaled linearly between this value and the maximum bitrate when the video is transcoded at 60 FPS. Wrong values are replaced by default values.`,
+        descriptionHTML: `The base bitrate for video in bits. Plugin prefers minimum bitrate between the bitrate setting and video bitrate.<br/>This bitrate used when the video is transcoded at 30 FPS. The bitrate will be scaled linearly between this value and the maximum bitrate when the video is transcoded at 60 FPS. Wrong values are replaced by default values.`,
            
         private: true,
     })
@@ -113,7 +113,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 }
 
 export async function unregister() {
-    logger.info("Unregistering peertube-plugin-hardware-encode")
+    logger.info("Unregistering peertube-plugin-av1-transcode")
     transcodingManager.removeAllProfilesAndEncoderPriorities()
     return true
 }

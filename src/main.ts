@@ -227,7 +227,7 @@ function buildInitOptions() {
         ]
     } else {
         return [
-            '-loglevel info'
+            '-hide_banner'
         ]
     }
 }

@@ -13,9 +13,9 @@
         "trascode",
         "encode"
     ],
-    "homepage": "https://github.com/TheoLeCalvar/peertube-plugin-hardware-transcode-vaapi",
+    "homepage": "https://github.com/ilfarpro/peertube-plugin-av1-advanced",
     "author": "gdsn",
-    "bugs": "https://github.com/TheoLeCalvar/peertube-plugin-hardware-transcode-vaapi",
+    "bugs": "https://github.com/ilfarpro/peertube-plugin-av1-advanced/issues",
     "library": "./dist/main.js",
     "files": [
         "/dist"

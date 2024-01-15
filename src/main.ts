@@ -44,14 +44,19 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     logger.info("Registering peertube-plugin-av1-advanced");
 
     const encoder = 'libsvtav1'
+    const audio_encoder = 'libopus'
     const profileName = 'SVT-AV1'
 
     // Add trasncoding profiles
     transcodingManager.addVODProfile(encoder, profileName, vodBuilder)
+    transcodingManager.addVODProfile(audio_encoder, profileName, vodAudioBuilder)
+
     transcodingManager.addVODEncoderPriority('video', encoder, 1000)
+    transcodingManager.addVODEncoderPriority('audio', audio_encoder, 1000)
 
     transcodingManager.addLiveProfile(encoder, profileName, liveBuilder)
     transcodingManager.addLiveEncoderPriority('video', encoder, 1000)
+    transcodingManager.addLiveEncoderPriority('audio', audio_encoder, 1000)
 
     // Load existing settings and default to constants if not present
     await loadSettings(settingsManager)
@@ -269,6 +274,22 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     return options 
 }
 
+async function vodAudioBuilder(params: EncoderOptionsBuilderParams) : Promise<EncoderOptions> {
+    // AUDIO ENCODING SETTINGS
+    let options : EncoderOptions = {
+        scaleFilter: {
+            // software decode requires specifying pixel format for hardware filter and upload it to GPU
+            name: pluginSettings.hardwareDecode ? 'scale' : 'scale'
+        },
+        inputOptions: [],
+        outputOptions: [
+            `-b:a 320k`,
+            `-af loudnorm=I=-14:LRA=11:TP=-1`
+        ]
+    }
+    logger.info(`EncoderOptions: ${JSON.stringify(options)}`)
+    return options 
+}
 
 async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<EncoderOptions> {
     const { resolution, fps, streamNum, inputBitrate } = params

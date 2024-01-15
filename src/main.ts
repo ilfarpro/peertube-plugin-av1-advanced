@@ -262,12 +262,11 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         outputOptions: [
             `-preset ${pluginSettings.quality}`,
             `-pix_fmt yuv420p`,
-            //`-b:v${streamSuffix} ${targetBitrate}`,
             `-crf ${pluginSettings.crf}`,
             `-maxrate ${targetBitrate}`,
             `-bufsize ${targetBitrate * 2}`,
             `-g ${fps}*${pluginSettings.gop}`,
-            `-svtav1-params tune=0`
+            `-svtav1-params tune=0:fast-decode=3`
         ]
     }
     logger.info(`EncoderOptions: ${JSON.stringify(options)}`)

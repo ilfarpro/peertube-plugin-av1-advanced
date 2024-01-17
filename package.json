@@ -1,8 +1,8 @@
 {
-    "name": "peertube-plugin-av1-advanced",
-    "version": "0.4.2",
+    "name": "peertube-plugin-svt-av1-psy-8bit",
+    "version": "0.4.7",
     "license": "MIT",
-    "description": "Adds SVT-AV1 transcoding profile. Available settings: max bitrate per resolution, SVT-AV1 presets, CRF. Reccommended to use with latest FFMPEG to get latest SVT-AV1 encoder. FFMPEG in official Peertube Docker image comes with outdated version.",
+    "description": "Adds SVT-AV1-PSY transcoding profile. Uses 8-bit for compatibility. Available settings: max bitrate per resolution, SVT-AV1 presets, CRF. Requires custom ffmpeg build with SVT-AV1-PSY patch, check plugins repo for additional info.",
     "engine": {
         "peertube": ">=5.1.0"
     },

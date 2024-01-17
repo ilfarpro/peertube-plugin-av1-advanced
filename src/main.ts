@@ -266,7 +266,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
             `-maxrate ${targetBitrate}`,
             `-bufsize ${targetBitrate * 2}`,
             `-g ${fps}*${pluginSettings.gop}`,
-            `-svtav1-params tune=0:fast-decode=1:tile-rows=3:tile-columns=4:film-grain=4:film-grain-denoise=0`
+            `-svtav1-params tune=0:fast-decode=1:tile-rows=3:tile-columns=4`
         ]
     }
     logger.info(`EncoderOptions: ${JSON.stringify(options)}`)

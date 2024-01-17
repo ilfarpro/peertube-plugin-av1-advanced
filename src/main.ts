@@ -154,7 +154,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
     registerSetting({
         name: 'base-bitrate-description',
-        label: 'Base bitrate',
+        label: 'Max bitrate',
 
         type: 'html',
         html: '',
@@ -166,7 +166,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
         logger.info("registering bitrate setting: "+ bitrate.toString())
         registerSetting({
             name: `base-bitrate-${resolution}`,
-            label: `Base bitrate for ${printResolution(resolution)}`,
+            label: `Max bitrate for ${printResolution(resolution)}`,
 
             type: 'input',
 
@@ -342,7 +342,7 @@ function getTargetBitrate (resolution : VideoResolution, fps : number) : number 
     // Based on numbers from Youtube, 60 fps bitrate divided by 30 fps bitrate:
     //  720p: 2600 / 1750 = 1.49
     // 1080p: 4400 / 3300 = 1.33
-    const maxBitrate = baseBitrate * 1.4
+    const maxBitrate = baseBitrate * 1.6
     const maxBitrateDifference = maxBitrate - baseBitrate
     const maxFpsDifference = 60 - 30
     // For 1080p video with default settings, this results in the following formula:

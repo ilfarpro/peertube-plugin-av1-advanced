@@ -1,5 +1,5 @@
 {
-    "name": "peertube-plugin-svt-av1-advanced",
+    "name": "peertube-plugin-av1-advanced",
     "version": "0.4.7",
     "license": "MIT",
     "description": "Adds SVT-AV1 transcoding profile. Uses 8-bit, fast-decode, tiling for compatibility. Available settings: max bitrate per resolution, SVT-AV1 presets, CRF. Use it with latest FFMPEG to get best from SVT-AV1 encoder, check plugin repo for info.",

@@ -11,9 +11,9 @@ const DEFAULT_CRF : number = 28
 const DEFAULT_GOP : number = 1
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
-    [VideoResolution.H_144P, 1500 * 1000],
-    [VideoResolution.H_360P, 2500 * 1000],
-    [VideoResolution.H_480P, 3500 * 1000],
+    [VideoResolution.H_144P, 700 * 1000],
+    [VideoResolution.H_360P, 2600 * 1000],
+    [VideoResolution.H_480P, 4000 * 1000],
     [VideoResolution.H_720P, 6500 * 1000],
     [VideoResolution.H_1080P, 11000 * 1000],
     [VideoResolution.H_1440P, 17_000 * 1000],

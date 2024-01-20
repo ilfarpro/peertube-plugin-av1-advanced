@@ -6,18 +6,18 @@ let logger : Logger
 let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
-const DEFAULT_QUALITY : number = 7
-const DEFAULT_CRF : number = 23
-const DEFAULT_GOP : number = 2
+const DEFAULT_QUALITY : number = 5
+const DEFAULT_CRF : number = 28
+const DEFAULT_GOP : number = 1
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
-    [VideoResolution.H_144P, 1000 * 1000],
-    [VideoResolution.H_360P, 2000 * 1000],
-    [VideoResolution.H_480P, 3000 * 1000],
-    [VideoResolution.H_720P, 5000 * 1000],
-    [VideoResolution.H_1080P, 7000 * 1000],
-    [VideoResolution.H_1440P, 11_000 * 1000],
-    [VideoResolution.H_4K, 16_000 * 1000]
+    [VideoResolution.H_144P, 1500 * 1000],
+    [VideoResolution.H_360P, 2500 * 1000],
+    [VideoResolution.H_480P, 3500 * 1000],
+    [VideoResolution.H_720P, 6500 * 1000],
+    [VideoResolution.H_1080P, 11000 * 1000],
+    [VideoResolution.H_1440P, 17_000 * 1000],
+    [VideoResolution.H_4K, 33_000 * 1000]
 ])
 
 interface PluginSettings {
@@ -78,7 +78,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'select',
         options: [
-            { label: 'Recommended (7)', value: '7' },
+            { label: 'Recommended HQ (5)', value: '5' },
             { label: '10', value: '10' },
             { label: '9', value: '9' },
             { label: '8', value: '8' },
@@ -99,7 +99,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'select',
         options: [
-            { label: 'Recommended (23)', value: '23' },
+            { label: 'Recommended (28)', value: '28' },
             { label: '38', value: '38' },
             { label: '37', value: '37' },
             { label: '36', value: '36' },
@@ -139,7 +139,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'select',
         options: [
-            { label: 'Recommended (2)', value: '2' },
+            { label: 'Recommended (1)', value: '1' },
             { label: '1', value: '1' },
             { label: '2', value: '2' },
             { label: '3', value: '3' },
@@ -333,22 +333,13 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
  * The calculation is based on two values:
  * Bitrate at VideoTranscodingFPS.AVERAGE is always the same as
  * getBaseBitrate(). Bitrate at VideoTranscodingFPS.MAX is always
- * getBaseBitrate() * 1.4. All other values are calculated linearly
+ * getBaseBitrate() * 1.6. All other values are calculated linearly
  * between these two points.
  */
 function getTargetBitrate (resolution : VideoResolution, fps : number) : number {
     const baseBitrate = pluginSettings.baseBitrate.get(resolution) || 0
-    // The maximum bitrate, used when fps === VideoTranscodingFPS.MAX
-    // Based on numbers from Youtube, 60 fps bitrate divided by 30 fps bitrate:
-    //  720p: 2600 / 1750 = 1.49
-    // 1080p: 4400 / 3300 = 1.33
     const maxBitrate = baseBitrate * 1.6
     const maxBitrateDifference = maxBitrate - baseBitrate
     const maxFpsDifference = 60 - 30
-    // For 1080p video with default settings, this results in the following formula:
-    // 3300 + (x - 30) * (1320/30)
-    // Example outputs:
-    // 1080p10: 2420 kbps, 1080p30: 3300 kbps, 1080p60: 4620 kbps
-    //  720p10: 1283 kbps,  720p30: 1750 kbps,  720p60: 2450 kbps
     return Math.floor(baseBitrate + (fps - 30) * (maxBitrateDifference / maxFpsDifference))
 }

@@ -6,18 +6,19 @@ let logger : Logger
 let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
-const DEFAULT_QUALITY : number = 5
+const DEFAULT_QUALITY : number = 6
 const DEFAULT_CRF : number = 28
-const DEFAULT_GOP : number = 1
+const DEFAULT_GOP : number = 2
 const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 64 * 1000],
     [VideoResolution.H_144P, 700 * 1000],
+    [VideoResolution.H_240P, 1500 * 1000],
     [VideoResolution.H_360P, 2600 * 1000],
-    [VideoResolution.H_480P, 4000 * 1000],
-    [VideoResolution.H_720P, 6500 * 1000],
-    [VideoResolution.H_1080P, 11000 * 1000],
-    [VideoResolution.H_1440P, 17_000 * 1000],
-    [VideoResolution.H_4K, 33_000 * 1000]
+    [VideoResolution.H_480P, 4200 * 1000],
+    [VideoResolution.H_720P, 7000 * 1000],
+    [VideoResolution.H_1080P, 13000 * 1000],
+    [VideoResolution.H_1440P, 19_000 * 1000],
+    [VideoResolution.H_4K, 36_000 * 1000]
 ])
 
 interface PluginSettings {
@@ -78,13 +79,16 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'select',
         options: [
-            { label: 'Recommended HQ (5)', value: '5' },
-            { label: '10', value: '10' },
-            { label: '9', value: '9' },
-            { label: '8', value: '8' },
-            { label: '7', value: '7' },
-            { label: '6', value: '6' },
-            { label: '5', value: '5' },
+            { label: 'Recommended HQ (6)', value: '6' },
+            { label: 'Fast 12', value: '12' },
+            { label: 'Fast 11', value: '11' },
+            { label: 'Fast 10', value: '10' },
+            { label: 'Fast 9', value: '9' },
+            { label: 'Fast 8', value: '8' },
+            { label: 'Fast 7', value: '7' },
+            { label: 'Slow 6', value: '6' },
+            { label: 'Slow 5', value: '5' },
+            { label: 'Slow 4', value: '4' },
         ],
 
         descriptionHTML: 'This parameter controls the speed / quality tradeoff. Lower values mean better quality but way more slower encoding. Higher values mean faster encoding but lower quality. This setting is hardware dependent, you may need to experiment to find the best value for your hardware.',
@@ -139,7 +143,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'select',
         options: [
-            { label: 'Recommended (1)', value: '1' },
+            { label: 'Recommended (2)', value: '2' },
             { label: '1', value: '1' },
             { label: '2', value: '2' },
             { label: '3', value: '3' },
@@ -211,6 +215,7 @@ function printResolution(resolution : VideoResolution) : string {
     switch (resolution) {
         case VideoResolution.H_NOVIDEO: return 'audio only'
         case VideoResolution.H_144P:
+        case VideoResolution.H_240P:
         case VideoResolution.H_360P:
         case VideoResolution.H_480P:
         case VideoResolution.H_720P:

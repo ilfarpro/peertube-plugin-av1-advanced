@@ -313,6 +313,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         },
         inputOptions: shouldInitVaapi ? buildInitOptions() : [],
         outputOptions: [
+            `-sws_flags lanczos+accurate_rnd`,
             `-preset ${pluginSettings.quality}`,
             `-pix_fmt yuv420p`,
             `-crf ${targetCRF}`,

@@ -1,6 +1,5 @@
 import { PluginSettingsManager, PluginTranscodingManager } from "@peertube/peertube-types"
 import { EncoderOptions, EncoderOptionsBuilderParams, RegisterServerOptions, VideoResolution } from "@peertube/peertube-types"
-import { createSafeIn } from "@peertube/peertube-types/server/models/shared"
 import { Logger } from 'winston'
 
 let logger : Logger

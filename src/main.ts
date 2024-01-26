@@ -1,5 +1,6 @@
 import { PluginSettingsManager, PluginTranscodingManager } from "@peertube/peertube-types"
 import { EncoderOptions, EncoderOptionsBuilderParams, RegisterServerOptions, VideoResolution } from "@peertube/peertube-types"
+import { createSafeIn } from "@peertube/peertube-types/server/models/shared"
 import { Logger } from 'winston'
 
 let logger : Logger
@@ -21,19 +22,34 @@ const DEFAULT_BITRATES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_4K, 36_000 * 1000]
 ])
 
+const DEFAULT_CRF_RES : Map<VideoResolution, number> = new Map([
+    [VideoResolution.H_NOVIDEO, 28],
+    [VideoResolution.H_144P, 28],
+    [VideoResolution.H_240P, 28],
+    [VideoResolution.H_360P, 28],
+    [VideoResolution.H_480P, 28],
+    [VideoResolution.H_720P, 28],
+    [VideoResolution.H_1080P, 28],
+    [VideoResolution.H_1440P, 28],
+    [VideoResolution.H_4K, 28]
+])
+
+
 interface PluginSettings {
     hardwareDecode : boolean
     quality: number
     crf: number
     gop: number
     baseBitrate: Map<VideoResolution, number>
+    crf_per_res: Map<VideoResolution, number>
 }
 let pluginSettings : PluginSettings = {
     hardwareDecode: DEFAULT_HARDWARE_DECODE,
     quality: DEFAULT_QUALITY,
     crf: DEFAULT_CRF,
     gop: DEFAULT_GOP,
-    baseBitrate: new Map(DEFAULT_BITRATES)
+    baseBitrate: new Map(DEFAULT_BITRATES),
+    crf_per_res: new Map(DEFAULT_CRF_RES)
 }
 
 let latestStreamNum = 9999
@@ -181,6 +197,31 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
         })
     }
 
+    registerSetting({
+        name: 'crf-res-description',
+        label: 'CRF per Resolution',
+
+        type: 'html',
+        html: '',
+        descriptionHTML: `Specify CRF for each resolution to get target quality or filesize at given resolution.`,
+           
+        private: true,
+    })
+    for (const [resolution, crf_per_res] of pluginSettings.crf_per_res) {
+        logger.info("registering crf setting: "+ crf_per_res.toString())
+        registerSetting({
+            name: `crf-for-${resolution}`,
+            label: `CRF for ${printResolution(resolution)}`,
+
+            type: 'input',
+
+            default: DEFAULT_CRF_RES.get(resolution)?.toString(),
+            descriptionHTML: `Default value: ${DEFAULT_CRF_RES.get(resolution)}`,
+
+            private: false
+        })
+    }
+
     settingsManager.onSettingsChange(async (settings) => {
         loadSettings(settingsManager)
     })
@@ -203,6 +244,13 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
         const storedValue = await settingsManager.getSetting(key) as string
         pluginSettings.baseBitrate.set(resolution, parseInt(storedValue) || bitrate)
         logger.info(`Bitrate ${printResolution(resolution)}: ${pluginSettings.baseBitrate.get(resolution)}`)
+    }
+
+    for (const [resolution, crf_per_res] of DEFAULT_CRF_RES) {
+        const key = `crf-for-${resolution}`
+        const storedValue = await settingsManager.getSetting(key) as string
+        pluginSettings.crf_per_res.set(resolution, parseInt(storedValue) || crf_per_res)
+        logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.crf_per_res.get(resolution)}`)
     }
 
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
@@ -246,6 +294,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     const { resolution, fps, streamNum, inputBitrate } = params
     //const streamSuffix = streamNum == undefined ? '' : `:${streamNum}`
     let targetBitrate = getTargetBitrate(resolution, fps)
+    let targetCRF = pluginSettings.baseBitrate.get(resolution) || 0
     let shouldInitVaapi = (streamNum == undefined || streamNum <= latestStreamNum)
 
     if (targetBitrate > inputBitrate) {
@@ -267,7 +316,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         outputOptions: [
             `-preset ${pluginSettings.quality}`,
             `-pix_fmt yuv420p`,
-            `-crf ${pluginSettings.crf}`,
+            `-crf ${targetCRF}`,
             `-maxrate ${targetBitrate}`,
             `-bufsize ${targetBitrate * 2}`,
             `-g ${fps}*${pluginSettings.gop}`,

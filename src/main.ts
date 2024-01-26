@@ -293,7 +293,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     const { resolution, fps, streamNum, inputBitrate } = params
     //const streamSuffix = streamNum == undefined ? '' : `:${streamNum}`
     let targetBitrate = getTargetBitrate(resolution, fps)
-    let targetCRF = pluginSettings.baseBitrate.get(resolution) || 0
+    let targetCRF = pluginSettings.crf_per_res.get(resolution) || 0
     let shouldInitVaapi = (streamNum == undefined || streamNum <= latestStreamNum)
 
     if (targetBitrate > inputBitrate) {

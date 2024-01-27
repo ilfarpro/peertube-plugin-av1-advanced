@@ -1,6 +1,6 @@
 {
-    "name": "peertube-plugin-svt-av1-psy-devel",
-    "version": "0.5.2",
+    "name": "peertube-plugin-svt-av1-psy-devel1",
+    "version": "0.5.3",
     "license": "MIT",
     "description": "Adds SVT-AV1-PSY transcoding profile with loudnorm. Uses 8-bit for compatibility. Available settings: max bitrate per resolution, SVT-AV1 presets, CRF. Requires custom ffmpeg build with SVT-AV1-PSY, check plugins repo for additional info.",
     "engine": {

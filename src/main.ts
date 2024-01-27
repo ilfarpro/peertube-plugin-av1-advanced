@@ -6,7 +6,7 @@ let logger : Logger
 let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
-const DEFAULT_QUALITY : number = 6
+const DEFAULT_PIX_FMT : string = "yuv420p"
 const DEFAULT_GOP : number = 2
 const DEFAULT_CRF_RES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 28],
@@ -33,14 +33,14 @@ const DEFAULT_PRESET : Map<VideoResolution, number> = new Map([
 
 interface PluginSettings {
     hardwareDecode : boolean
-    quality: number
+    pix_fmt: string
     preset: Map<VideoResolution, number>
     gop: number
     crfPerResolution: Map<VideoResolution, number>
 }
 let pluginSettings : PluginSettings = {
     hardwareDecode: DEFAULT_HARDWARE_DECODE,
-    quality: DEFAULT_QUALITY,
+    pix_fmt: DEFAULT_PIX_FMT,
     preset: new Map(DEFAULT_PRESET),
     gop: DEFAULT_GOP,
     crfPerResolution: new Map(DEFAULT_CRF_RES)
@@ -84,26 +84,18 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
         private: false
     })
     registerSetting({
-        name: 'quality',
-        label: 'SVT-AV1 preset',
+        name: 'pix_fmt',
+        label: '8bit or 10bit',
 
         type: 'select',
         options: [
-            { label: 'Recommended HQ (6)', value: '6' },
-            { label: 'Fast 12', value: '12' },
-            { label: 'Fast 11', value: '11' },
-            { label: 'Fast 10', value: '10' },
-            { label: 'Fast 9', value: '9' },
-            { label: 'Fast 8', value: '8' },
-            { label: 'Fast 7', value: '7' },
-            { label: 'Slow 6', value: '6' },
-            { label: 'Slow 5', value: '5' },
-            { label: 'Slow 4', value: '4' },
+            { label: '8 bit (best compatibility)', value: 'yuv420p' },
+            { label: '10 bit (best quality)', value: 'yuv420p10le' },
         ],
 
         descriptionHTML: 'This parameter controls the speed / quality tradeoff. Lower values mean better quality but way more slower encoding. Higher values mean faster encoding but lower quality. This setting is hardware dependent, you may need to experiment to find the best value for your hardware.',
 
-        default: DEFAULT_QUALITY.toString(),
+        default: DEFAULT_PIX_FMT.toString(),
         private: false
     })
 
@@ -189,7 +181,7 @@ export async function unregister() {
 
 async function loadSettings(settingsManager: PluginSettingsManager) {
     pluginSettings.hardwareDecode = await settingsManager.getSetting('hardware-decode') == "true"
-    pluginSettings.quality = parseInt(await settingsManager.getSetting('quality') as string) || DEFAULT_QUALITY
+    pluginSettings.pix_fmt = await settingsManager.getSetting('pix_fmt') as string || DEFAULT_PIX_FMT
     pluginSettings.gop = parseInt(await settingsManager.getSetting('gop') as string) || DEFAULT_GOP
 
     for (const [resolution, crfPerResolution] of DEFAULT_CRF_RES) {
@@ -207,7 +199,7 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
     }
 
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
-    logger.info(`SVT-AV1 preset: ${pluginSettings.quality}`)
+    logger.info(`PIX_FMT: ${pluginSettings.pix_fmt}`)
     logger.info(`GOP: ${pluginSettings.gop}`)
 }
 
@@ -264,7 +256,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         outputOptions: [
             `-sws_flags lanczos+accurate_rnd`,
             `-preset ${targetPreset}`,
-            `-pix_fmt yuv420p`,
+            `-pix_fmt ${pluginSettings.pix_fmt}`,
             `-crf ${targetCRF}`,
             `-g ${fps}*${pluginSettings.gop}`,
             `-svtav1-params tune=0:fast-decode=1:tile-rows=3:tile-columns=4:variance-boost-strength=2`
@@ -309,7 +301,7 @@ async function liveBuilder(params: EncoderOptionsBuilderParams) : Promise<Encode
       },
       inputOptions: shouldInitVaapi ? buildInitOptions() : [],
       outputOptions: [
-        `-preset ${pluginSettings.quality}`,
+        `-preset ${pluginSettings.preset}`,
         `-r:v${streamSuffix} ${fps}`,
         `-profile:v${streamSuffix} high`,
         `-level:v${streamSuffix} 3.1`,

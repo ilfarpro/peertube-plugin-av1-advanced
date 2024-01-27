@@ -6,7 +6,6 @@ let logger : Logger
 let transcodingManager : PluginTranscodingManager
 
 const DEFAULT_HARDWARE_DECODE : boolean = false
-const DEFAULT_PIX_FMT : string = "yuv420p"
 const DEFAULT_GOP : number = 2
 const DEFAULT_CRF_RES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 28],
@@ -30,20 +29,31 @@ const DEFAULT_PRESET : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_1440P, 6],
     [VideoResolution.H_4K, 6]
 ])
+const DEFAULT_PIX_FMT : Map<VideoResolution, string> = new Map([
+    [VideoResolution.H_NOVIDEO, 'yuv420p'],
+    [VideoResolution.H_144P, 'yuv420p'],
+    [VideoResolution.H_240P, 'yuv420p'],
+    [VideoResolution.H_360P, 'yuv420p'],
+    [VideoResolution.H_480P, 'yuv420p'],
+    [VideoResolution.H_720P, 'yuv420p'],
+    [VideoResolution.H_1080P, 'yuv420p'],
+    [VideoResolution.H_1440P, 'yuv420p'],
+    [VideoResolution.H_4K, 'yuv420p10le']
+])
 
 interface PluginSettings {
     hardwareDecode : boolean
-    pix_fmt: string
-    preset: Map<VideoResolution, number>
     gop: number
     crfPerResolution: Map<VideoResolution, number>
+    pix_fmtPerResolution: Map<VideoResolution, string>
+    preset: Map<VideoResolution, number>
 }
 let pluginSettings : PluginSettings = {
     hardwareDecode: DEFAULT_HARDWARE_DECODE,
-    pix_fmt: DEFAULT_PIX_FMT,
     preset: new Map(DEFAULT_PRESET),
     gop: DEFAULT_GOP,
-    crfPerResolution: new Map(DEFAULT_CRF_RES)
+    crfPerResolution: new Map(DEFAULT_CRF_RES),
+    pix_fmtPerResolution: new Map(DEFAULT_PIX_FMT)
 }
 
 let latestStreamNum = 9999
@@ -81,21 +91,6 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
         descriptionHTML: 'Currently broken. Setting enables hardware encoder instead of software one. This highly improves encoding speed but end result will be looking slightly worse compared to softrware encoded video.',
 
         default: DEFAULT_HARDWARE_DECODE,
-        private: false
-    })
-    registerSetting({
-        name: 'pix_fmt',
-        label: '8bit or 10bit',
-
-        type: 'select',
-        options: [
-            { label: '8 bit (best compatibility)', value: 'yuv420p' },
-            { label: '10 bit (best quality)', value: 'yuv420p10le' },
-        ],
-
-        descriptionHTML: 'This parameter controls the speed / quality tradeoff. Lower values mean better quality but way more slower encoding. Higher values mean faster encoding but lower quality. This setting is hardware dependent, you may need to experiment to find the best value for your hardware.',
-
-        default: DEFAULT_PIX_FMT.toString(),
         private: false
     })
 
@@ -144,6 +139,31 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
     }
 
     registerSetting({
+        name: 'pix_fmt-res-description',
+        label: 'CRF per Resolution',
+
+        type: 'html',
+        html: '',
+        descriptionHTML: `Specify CRF for each resolution to get target quality or filesize at given resolution.`,
+           
+        private: true,
+    })
+    for (const [resolution, pix_fmtPerResolution] of pluginSettings.pix_fmtPerResolution) {
+        logger.info("registering pix_fmt setting: "+ pix_fmtPerResolution.toString())
+        registerSetting({
+            name: `pix_fmt-for-${resolution}`,
+            label: `PIX_FMT for ${printResolution(resolution)}`,
+
+            type: 'input',
+
+            default: DEFAULT_PIX_FMT.get(resolution)?.toString(),
+            descriptionHTML: `Default value: ${DEFAULT_PIX_FMT.get(resolution)}`,
+
+            private: false
+        })
+    }
+
+    registerSetting({
         name: 'preset-description',
         label: 'SVT-AV1 preset per Resolution',
 
@@ -181,7 +201,6 @@ export async function unregister() {
 
 async function loadSettings(settingsManager: PluginSettingsManager) {
     pluginSettings.hardwareDecode = await settingsManager.getSetting('hardware-decode') == "true"
-    pluginSettings.pix_fmt = await settingsManager.getSetting('pix_fmt') as string || DEFAULT_PIX_FMT
     pluginSettings.gop = parseInt(await settingsManager.getSetting('gop') as string) || DEFAULT_GOP
 
     for (const [resolution, crfPerResolution] of DEFAULT_CRF_RES) {
@@ -189,6 +208,13 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
         const storedValue = await settingsManager.getSetting(key) as string
         pluginSettings.crfPerResolution.set(resolution, parseInt(storedValue) || crfPerResolution)
         logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.crfPerResolution.get(resolution)}`)
+    }
+
+    for (const [resolution, pix_fmtPerResolution] of DEFAULT_PIX_FMT) {
+        const key = `pix_fmt-for-${resolution}`
+        const storedValue = await settingsManager.getSetting(key) as string
+        pluginSettings.pix_fmtPerResolution.set(resolution, storedValue || pix_fmtPerResolution)
+        logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.pix_fmtPerResolution.get(resolution)}`)
     }
 
     for (const [resolution, preset] of DEFAULT_PRESET) {
@@ -199,7 +225,6 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
     }
 
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
-    logger.info(`PIX_FMT: ${pluginSettings.pix_fmt}`)
     logger.info(`GOP: ${pluginSettings.gop}`)
 }
 
@@ -239,6 +264,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     //const streamSuffix = streamNum == undefined ? '' : `:${streamNum}`
     let targetCRF = pluginSettings.crfPerResolution.get(resolution) || 0
     let targetPreset = pluginSettings.preset.get(resolution) || 0
+    let targetPix_Fmt = pluginSettings.pix_fmtPerResolution.get(resolution)
     let shouldInitVaapi = (streamNum == undefined || streamNum <= latestStreamNum)
 
     logger.info(`Building encoder options, received ${JSON.stringify(params)}`)
@@ -255,8 +281,8 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         inputOptions: shouldInitVaapi ? buildInitOptions() : [],
         outputOptions: [
             `-sws_flags lanczos+accurate_rnd`,
+            `-pix_fmt ${targetPix_Fmt}`,
             `-preset ${targetPreset}`,
-            `-pix_fmt ${pluginSettings.pix_fmt}`,
             `-crf ${targetCRF}`,
             `-g ${fps}*${pluginSettings.gop}`,
             `-svtav1-params tune=0:fast-decode=1:tile-rows=3:tile-columns=4:variance-boost-strength=2`

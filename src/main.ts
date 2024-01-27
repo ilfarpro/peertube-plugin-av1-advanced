@@ -19,17 +19,29 @@ const DEFAULT_CRF_RES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_1440P, 28],
     [VideoResolution.H_4K, 28]
 ])
-
+const DEFAULT_PRESET : Map<VideoResolution, number> = new Map([
+    [VideoResolution.H_NOVIDEO, 12],
+    [VideoResolution.H_144P, 4],
+    [VideoResolution.H_240P, 4],
+    [VideoResolution.H_360P, 4],
+    [VideoResolution.H_480P, 4],
+    [VideoResolution.H_720P, 5],
+    [VideoResolution.H_1080P, 5],
+    [VideoResolution.H_1440P, 6],
+    [VideoResolution.H_4K, 6]
+])
 
 interface PluginSettings {
     hardwareDecode : boolean
     quality: number
+    preset: Map<VideoResolution, number>
     gop: number
     crfPerResolution: Map<VideoResolution, number>
 }
 let pluginSettings : PluginSettings = {
     hardwareDecode: DEFAULT_HARDWARE_DECODE,
     quality: DEFAULT_QUALITY,
+    preset: new Map(DEFAULT_PRESET),
     gop: DEFAULT_GOP,
     crfPerResolution: new Map(DEFAULT_CRF_RES)
 }
@@ -139,6 +151,31 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
         })
     }
 
+    registerSetting({
+        name: 'preset-description',
+        label: 'SVT-AV1 preset per Resolution',
+
+        type: 'html',
+        html: '',
+        descriptionHTML: `Specify preset for each resolution to get target quality.`,
+           
+        private: true,
+    })
+    for (const [resolution, preset] of pluginSettings.preset) {
+        logger.info("registering preset setting: "+ preset.toString())
+        registerSetting({
+            name: `preset-for-${resolution}`,
+            label: `Preset for ${printResolution(resolution)}`,
+
+            type: 'input',
+
+            default: DEFAULT_PRESET.get(resolution)?.toString(),
+            descriptionHTML: `Default value: ${DEFAULT_PRESET.get(resolution)}`,
+
+            private: false
+        })
+    }
+
     settingsManager.onSettingsChange(async (settings) => {
         loadSettings(settingsManager)
     })
@@ -160,6 +197,13 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
         const storedValue = await settingsManager.getSetting(key) as string
         pluginSettings.crfPerResolution.set(resolution, parseInt(storedValue) || crfPerResolution)
         logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.crfPerResolution.get(resolution)}`)
+    }
+
+    for (const [resolution, preset] of DEFAULT_PRESET) {
+        const key = `preset-for-${resolution}`
+        const storedValue = await settingsManager.getSetting(key) as string
+        pluginSettings.crfPerResolution.set(resolution, parseInt(storedValue) || preset)
+        logger.info(`Preset for ${printResolution(resolution)}: ${pluginSettings.preset.get(resolution)}`)
     }
 
     logger.info(`Hardware decode: ${pluginSettings.hardwareDecode}`)
@@ -202,6 +246,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
     const { resolution, fps, streamNum } = params
     //const streamSuffix = streamNum == undefined ? '' : `:${streamNum}`
     let targetCRF = pluginSettings.crfPerResolution.get(resolution) || 0
+    let targetPreset = pluginSettings.preset.get(resolution) || 0
     let shouldInitVaapi = (streamNum == undefined || streamNum <= latestStreamNum)
 
     logger.info(`Building encoder options, received ${JSON.stringify(params)}`)
@@ -218,7 +263,7 @@ async function vodBuilder(params: EncoderOptionsBuilderParams) : Promise<Encoder
         inputOptions: shouldInitVaapi ? buildInitOptions() : [],
         outputOptions: [
             `-sws_flags lanczos+accurate_rnd`,
-            `-preset ${pluginSettings.quality}`,
+            `-preset ${targetPreset}`,
             `-pix_fmt yuv420p`,
             `-crf ${targetCRF}`,
             `-g ${fps}*${pluginSettings.gop}`,

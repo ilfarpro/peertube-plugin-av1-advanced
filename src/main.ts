@@ -203,11 +203,11 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
     pluginSettings.hardwareDecode = await settingsManager.getSetting('hardware-decode') == "true"
     pluginSettings.gop = parseInt(await settingsManager.getSetting('gop') as string) || DEFAULT_GOP
 
-    for (const [resolution] of DEFAULT_CRF_RES) {
+    for (const [resolution, crfPerResolution] of DEFAULT_CRF_RES) {
         const key = `crf-for-${resolution}`
         const storedCRF = await settingsManager.getSetting(key) as string
-        pluginSettings.preset.set(resolution, parseInt(storedCRF))
-        logger.info(`Preset for ${printResolution(resolution)}: ${pluginSettings.preset.get(resolution)}`)
+        pluginSettings.preset.set(resolution, parseInt(storedCRF) || crfPerResolution)
+        logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.preset.get(resolution)}`)
     }
 
     for (const [resolution, pix_fmtPerResolution] of DEFAULT_PIX_FMT) {

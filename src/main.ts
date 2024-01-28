@@ -119,12 +119,12 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'html',
         html: '',
-        descriptionHTML: `Specify CRF for each resolution to get target quality or filesize at given resolution.`,
+        descriptionHTML: `Specify CRF for each resolution to get target quality.`,
            
         private: true,
     })
     for (const [resolution, crfPerResolution] of pluginSettings.crfPerResolution) {
-        logger.info("registering crf setting: "+ crfPerResolution.toString())
+        logger.info("registering CRF setting: "+ crfPerResolution.toString())
         registerSetting({
             name: `crf-for-${resolution}`,
             label: `CRF for ${printResolution(resolution)}`,
@@ -140,11 +140,11 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
     registerSetting({
         name: 'pix_fmt-res-description',
-        label: 'CRF per Resolution',
+        label: 'PIX_FMT per Resolution',
 
         type: 'html',
         html: '',
-        descriptionHTML: `Specify CRF for each resolution to get target quality or filesize at given resolution.`,
+        descriptionHTML: `Specify PIX_FMT for each resolution to get target quality or filesize at given resolution.`,
            
         private: true,
     })
@@ -205,16 +205,16 @@ async function loadSettings(settingsManager: PluginSettingsManager) {
 
     for (const [resolution] of DEFAULT_CRF_RES) {
         const key = `crf-for-${resolution}`
-        const storedValue = await settingsManager.getSetting(key) as string
-        pluginSettings.crfPerResolution.set(resolution, parseInt(storedValue))
-        logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.crfPerResolution.get(resolution)}`)
+        const storedCRF = await settingsManager.getSetting(key) as string
+        pluginSettings.preset.set(resolution, parseInt(storedCRF))
+        logger.info(`Preset for ${printResolution(resolution)}: ${pluginSettings.preset.get(resolution)}`)
     }
 
     for (const [resolution, pix_fmtPerResolution] of DEFAULT_PIX_FMT) {
         const key = `pix_fmt-for-${resolution}`
         const storedValue = await settingsManager.getSetting(key) as string
         pluginSettings.pix_fmtPerResolution.set(resolution, storedValue || pix_fmtPerResolution)
-        logger.info(`CRF for ${printResolution(resolution)}: ${pluginSettings.pix_fmtPerResolution.get(resolution)}`)
+        logger.info(`PIX_FMT for ${printResolution(resolution)}: ${pluginSettings.pix_fmtPerResolution.get(resolution)}`)
     }
 
     for (const [resolution, preset] of DEFAULT_PRESET) {

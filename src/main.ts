@@ -9,23 +9,23 @@ const DEFAULT_HARDWARE_DECODE : boolean = false
 const DEFAULT_GOP : number = 2
 const DEFAULT_CRF_RES : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 28],
-    [VideoResolution.H_144P, 28],
-    [VideoResolution.H_240P, 28],
-    [VideoResolution.H_360P, 28],
-    [VideoResolution.H_480P, 28],
-    [VideoResolution.H_720P, 28],
-    [VideoResolution.H_1080P, 28],
-    [VideoResolution.H_1440P, 28],
-    [VideoResolution.H_4K, 28]
+    [VideoResolution.H_144P, 20],
+    [VideoResolution.H_240P, 20],
+    [VideoResolution.H_360P, 20],
+    [VideoResolution.H_480P, 20],
+    [VideoResolution.H_720P, 23],
+    [VideoResolution.H_1080P, 26],
+    [VideoResolution.H_1440P, 26],
+    [VideoResolution.H_4K, 30]
 ])
 const DEFAULT_PRESET : Map<VideoResolution, number> = new Map([
     [VideoResolution.H_NOVIDEO, 12],
-    [VideoResolution.H_144P, 4],
-    [VideoResolution.H_240P, 4],
-    [VideoResolution.H_360P, 4],
-    [VideoResolution.H_480P, 4],
-    [VideoResolution.H_720P, 5],
-    [VideoResolution.H_1080P, 5],
+    [VideoResolution.H_144P, 2],
+    [VideoResolution.H_240P, 2],
+    [VideoResolution.H_360P, 2],
+    [VideoResolution.H_480P, 2],
+    [VideoResolution.H_720P, 4],
+    [VideoResolution.H_1080P, 4],
     [VideoResolution.H_1440P, 6],
     [VideoResolution.H_4K, 6]
 ])
@@ -144,7 +144,7 @@ export async function register({settingsManager, peertubeHelpers, transcodingMan
 
         type: 'html',
         html: '',
-        descriptionHTML: `Specify PIX_FMT for each resolution to get target quality or filesize at given resolution.`,
+        descriptionHTML: `Specify PIX_FMT for each resolution. This is required for compatibility. For example, older Android phones (like Pixel 3) can't play video smoothly, if video is 10 bit. So for resolutions under 4K 8 bit is prefered.`,
            
         private: true,
     })
